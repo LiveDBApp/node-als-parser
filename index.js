@@ -38,6 +38,8 @@ export default class Project {
   }
 }
 
+export findAlsFiles
+
 // console.log(parsed.$.Creator)
 
 // let files = await findAlsFiles("./testfiles");
