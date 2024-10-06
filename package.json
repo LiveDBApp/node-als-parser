@@ -10,7 +10,6 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@zip.js/zip.js": "^2.6.40",
     "xml2js": "^0.6.2"
   },
   "type": "module"
