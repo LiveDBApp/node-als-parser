@@ -1,9 +1,11 @@
-import { promises as fs } from 'fs'
-import { createUnzip } from 'zlib'
-import { Readable } from 'stream'
-import { promisify } from 'util'
+import { promises as fs } from 'node:fs'
+import { createUnzip } from 'node:zlib'
+import { Readable } from 'node:stream'
+import { promisify } from 'node:util'
 import xml2js from 'xml2js'
-import path from 'path'
+import path from 'node:path'
+import { createReadStream } from 'fs'
+import { createHash } from 'crypto'
 
 const streamToBuffer = async (stream) => {
 	const chunks = []
@@ -60,10 +62,20 @@ export async function parseXmlString(xmlString) {
 	}
 }
 
-export async function findAlsFiles(directoryPath) {
+export async function findAlsFiles(directoryPath, options) {
 	const alsFiles = []
 
+	if (!options) {
+		options = { backups: false }
+	}
+
 	async function recursiveSearch(currentPath) {
+		function isBackupFile(p) {
+			let _fname = path.basename(p)
+			let _dir = path.dirname(p).split(path.sep).pop()
+
+			return _dir === 'Backup'
+		}
 		try {
 			const entries = await fs.readdir(currentPath, { withFileTypes: true })
 
@@ -73,7 +85,13 @@ export async function findAlsFiles(directoryPath) {
 				if (entry.isDirectory()) {
 					await recursiveSearch(fullPath)
 				} else if (entry.isFile() && path.extname(entry.name) === '.als') {
-					alsFiles.push(path.resolve(fullPath))
+					if (options.backups === false) {
+						if (!isBackupFile(fullPath)) {
+							alsFiles.push(path.resolve(fullPath))
+						}
+					} else {
+						alsFiles.push(path.resolve(fullPath))
+					}
 				}
 			}
 		} catch (error) {
@@ -83,4 +101,42 @@ export async function findAlsFiles(directoryPath) {
 
 	await recursiveSearch(directoryPath)
 	return alsFiles
+}
+
+async function calculateFileSha256(filePath) {
+	return new Promise((resolve, reject) => {
+		const hash = createHash('sha256')
+		const stream = createReadStream(filePath)
+
+		stream.on('error', (error) => {
+			reject(new Error(`Error reading file: ${error.message}`))
+		})
+
+		stream.on('data', (chunk) => {
+			hash.update(chunk)
+		})
+
+		stream.on('end', () => {
+			resolve(hash.digest('hex'))
+		})
+	})
+}
+
+export async function getFileInfo(filePath) {
+	try {
+		const stats = await fs.stat(filePath)
+
+		const hash = await calculateFileSha256(filePath)
+
+		return {
+			name: path.basename(filePath),
+			path: filePath,
+			size: stats.size,
+			sha256: hash,
+			created: stats.birthtimeMs,
+			modified: stats.mtimeMs,
+		}
+	} catch (error) {
+		throw new Error(`Error processing file: ${error.message}`)
+	}
 }

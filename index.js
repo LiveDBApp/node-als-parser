@@ -1,58 +1,93 @@
-import { parseXmlString, readZipContents, findAlsFiles } from "./lib.js";
-import { stat } from "node:fs";
+import { parseXmlString, readZipContents, getFileInfo } from './lib.js'
+import { stat } from 'node:fs'
+import { basename } from 'node:path'
 
-export default class Project {
-  constructor(path) {
-    this._path = path;
-    this.initialized = false;
-  }
+// export const findAlsFiles = findAlsFiles
 
-  async read() {
-    try {
-      this._raw = await readZipContents(this._path);
-    } catch (e) {
-      console.error("Error reading project file", e);
-      throw new Error(`Error reading project file: ${this._path}`);
-    }
+export class Project {
+	#_raw
+	#_parsed
+	#_path
+	#_fileinfo
 
-    try {
-      this._parsed = await parseXmlString(this._raw);
-    } catch (e) {
-      console.error("Error parsing xml", e);
-      throw new Error(`Error parsing xml: ${this._path}`);
-    }
+	constructor(path) {
+		this.#_path = path
+		this.initialized = false
 
-    this.initialized = true;
-  }
+		return (async () => {
+			this.#_fileinfo = await getFileInfo(this.#_path)
+			await this.read()
+			return this
+		})()
+	}
 
-  get tracks() {
-    // return this._parsed.tracks.track
-  }
+	async read() {
+		try {
+			this.#_raw = await readZipContents(this.#_path)
+		} catch (e) {
+			console.error('Error reading project file', e)
+			throw new Error(`Error reading project file: ${this._path}`)
+		}
 
-  get trackCount() {
-    // return this._parsed.tracks.track.length
-  }
+		try {
+			this.#_parsed = await parseXmlString(this.#_raw)
 
-  get version() {
-    return this._parsed["$"].Creator;
-  }
+			// console.log('tracks', this.#_parsed.LiveSet)
+		} catch (e) {
+			console.error('Error parsing xml', e)
+			throw new Error(`Error parsing xml: ${this._path}`)
+		}
+
+		this.initialized = true
+	}
+
+	get tracks() {
+		return this.#_parsed.LiveSet.Tracks
+	}
+
+	get trackCount() {
+		// return this._parsed.tracks.track.length
+		let _tracks = this.#_parsed.LiveSet.Tracks
+		let count = 0
+
+		if ('AudioTrack' in _tracks && _tracks['AudioTrack'].length > 0) {
+			count += _tracks['AudioTrack'].length
+		}
+
+		if ('MidiTrack' in _tracks && _tracks['MidiTrack'].length > 0) {
+			count += _tracks['MidiTrack'].length
+		}
+
+		return count
+	}
+
+	get version() {
+		let regex = /([a-zA-Z\ ]+)\ ([0-9]+)\.([\d]+)\.([\d]+)?/
+		let pieces = regex.exec(this.#_parsed['$'].Creator)
+		return {
+			app: pieces[1],
+			majorVersion: parseInt(pieces[2]),
+			minorVersion: parseInt(pieces[3]),
+			buildNumber: parseInt(pieces[4]) || 0,
+		}
+	}
+
+	get location() {
+		return this.#_path
+	}
+
+	get fileInfo() {
+		return this.#_fileinfo
+	}
+
+	get info() {
+		return {
+			name: this.#_fileinfo.name,
+			version: this.version,
+			tracks: this.tracks,
+			trackCount: this.trackCount,
+			location: this.location,
+			info: this.fileInfo,
+		}
+	}
 }
-
-export findAlsFiles
-
-// console.log(parsed.$.Creator)
-
-// let files = await findAlsFiles("./testfiles");
-
-// console.log("files", files);
-
-// // let project = new Project('./Michelle.als')
-
-// // await project.read()
-
-// files.map(async (file) => {
-//   let _project = new Project(file);
-//   await _project.read();
-
-//   console.log(_project.version);
-// });
