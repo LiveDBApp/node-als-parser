@@ -175,10 +175,9 @@ async function resolvePath(inputPath) {
 }
 
 export async function validateAbletonProject(projectPath) {
+	// Resolve the absolute path
+	const absolutePath = path.resolve(projectPath)
 	try {
-		// Resolve the absolute path
-		const absolutePath = path.resolve(projectPath)
-
 		// Check 1: Path exists and is a directory
 		const stats = await fs.stat(absolutePath)
 		if (!stats.isDirectory()) {
@@ -231,33 +230,10 @@ export async function validateAbletonProject(projectPath) {
 		if (error.code === 'ENOENT') {
 			return {
 				isValid: false,
-				path: projectPath,
+				path: absolutePath,
 				errors: ['Path does not exist'],
 			}
 		}
 		throw new Error(`Error validating project: ${error.message}`)
 	}
 }
-
-// // Example usage
-// async function main() {
-//     const testPaths = [
-//         './My Project',                    // Good name, may not exist
-//         '/path/to/Not A Project',          // Wrong name
-//         '/path/to/Another Project',        // Right name, may not exist
-//         '.',                               // Current directory
-//         process.cwd(),                     // Current working directory
-//     ];
-
-//     for (const testPath of testPaths) {
-//         try {
-//             const result = await validateAbletonProject(testPath);
-//             console.log(`\nValidating: ${testPath}`);
-//             console.log(JSON.stringify(result, null, 2));
-//         } catch (error) {
-//             console.error(`Error with path ${testPath}: ${error.message}`);
-//         }
-//     }
-// }
-
-// main();

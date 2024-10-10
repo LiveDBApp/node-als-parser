@@ -31,12 +31,14 @@ test('findAlsFiles', async () => {
 
 test('validating a project folder', async () => {
 	let results = await lib.validateAbletonProject(TEST_PROJECT_FOLDER)
-	console.log(results)
+	// console.log(results)
 	expect(results.isValid).toBe(true)
 })
 
 test('failing a non-existent folder', async () => {
 	let results = await lib.validateAbletonProject('./foobarbaz')
+
+	// expect(1).toBe(1)
 	expect(results.isValid).toBe(false)
 	expect(results.errors[0]).toBe('Path does not exist')
 })

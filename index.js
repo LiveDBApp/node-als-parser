@@ -1,10 +1,14 @@
-import { parseXmlString, readZipContents, getFileInfo } from './lib.js'
+import {
+	parseXmlString,
+	readZipContents,
+	getFileInfo,
+	findAlsFiles,
+	validateAbletonProject,
+} from './lib.js'
 import { stat } from 'node:fs'
 import { basename } from 'node:path'
 
-// export const findAlsFiles = findAlsFiles
-
-export class Project {
+export class LiveSet {
 	#_raw
 	#_parsed
 	#_path
@@ -31,8 +35,6 @@ export class Project {
 
 		try {
 			this.#_parsed = await parseXmlString(this.#_raw)
-
-			// console.log('tracks', this.#_parsed.LiveSet)
 		} catch (e) {
 			console.error('Error parsing xml', e)
 			throw new Error(`Error parsing xml: ${this._path}`)
@@ -89,5 +91,51 @@ export class Project {
 			location: this.location,
 			info: this.fileInfo,
 		}
+	}
+}
+
+export class LiveProject {
+	#_directory
+	#_valid
+	liveSets = []
+	liveSetPaths = []
+
+	constructor(directory) {
+		this.#_directory = directory
+		this.path = false
+		this.name = false
+
+		return (async () => {
+			// async code goes here
+			let _result = await validateAbletonProject(directory)
+			if (_result.isValid !== true) {
+				throw `Directory ${directory} isn't an ableton project:\n ${_result.errors.join(
+					'\n',
+				)}`
+			}
+			this.#_valid = true
+			this.path = _result.path
+			this.name = _result.folderName
+
+			this.liveSetPaths = await findAlsFiles(this.#_directory, {
+				backups: false,
+			})
+
+			return this
+		})()
+	}
+
+	get isValid() {
+		return this.#_valid
+	}
+
+	async loadSets() {
+		let map = this.liveSetPaths.map((path) => {
+			return new LiveSet(path)
+		})
+
+		this.liveSets = await Promise.all(map)
+
+		return true
 	}
 }
