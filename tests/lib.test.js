@@ -31,6 +31,7 @@ test('findAlsFiles', async () => {
 
 test('validating a project folder', async () => {
 	let results = await lib.validateAbletonProject(TEST_PROJECT_FOLDER)
+	console.log(results)
 	expect(results.isValid).toBe(true)
 })
 
