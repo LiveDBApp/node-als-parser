@@ -64,6 +64,13 @@ export async function parseXmlString(xmlString) {
 
 export async function findAlsFiles(directoryPath, options) {
 	const alsFiles = []
+	let _directoryPath
+
+	if (!path.isAbsolute(directoryPath)) {
+		_directoryPath = path.normalize(process.cwd(), directoryPath)
+	}
+
+	// console.log('XXX', directoryPath, _directoryPath)
 
 	if (!options) {
 		options = { backups: false }
@@ -138,5 +145,33 @@ export async function getFileInfo(filePath) {
 		}
 	} catch (error) {
 		throw new Error(`Error processing file: ${error.message}`)
+	}
+}
+
+async function resolvePath(inputPath) {
+	try {
+		// Resolve the absolute path
+		const absolutePath = path.resolve(inputPath)
+
+		try {
+			// Check if path exists
+			await fs.access(absolutePath)
+			return {
+				original: inputPath,
+				resolved: absolutePath,
+				exists: true,
+				isDirectory: (await fs.stat(absolutePath)).isDirectory(),
+			}
+		} catch {
+			// Path doesn't exist
+			return {
+				original: inputPath,
+				resolved: absolutePath,
+				exists: false,
+				isDirectory: null,
+			}
+		}
+	} catch (error) {
+		throw new Error(`Error processing path: ${error.message}`)
 	}
 }
