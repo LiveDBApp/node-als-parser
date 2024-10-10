@@ -29,11 +29,11 @@ test('findAlsFiles', async () => {
 	expect(files[0].split('/').pop()).toBe('Michelle.als')
 })
 
-// test('validating a project folder', async () => {
-// 	let results = await lib.validateAbletonProject(TEST_PROJECT_FOLDER)
-// 	console.log(results)
-// 	expect(results.isValid).toBe(true)
-// })
+test('validating a project folder', async () => {
+	let results = await lib.validateAbletonProject(TEST_PROJECT_FOLDER)
+	console.log(results)
+	expect(results.isValid).toBe(true)
+})
 
 test('failing a non-existent folder', async () => {
 	let results = await lib.validateAbletonProject('./foobarbaz')
