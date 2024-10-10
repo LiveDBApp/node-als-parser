@@ -70,8 +70,6 @@ export async function findAlsFiles(directoryPath, options) {
 		_directoryPath = path.normalize(process.cwd(), directoryPath)
 	}
 
-	// console.log('XXX', directoryPath, _directoryPath)
-
 	if (!options) {
 		options = { backups: false }
 	}
@@ -175,3 +173,91 @@ async function resolvePath(inputPath) {
 		throw new Error(`Error processing path: ${error.message}`)
 	}
 }
+
+export async function validateAbletonProject(projectPath) {
+	try {
+		// Resolve the absolute path
+		const absolutePath = path.resolve(projectPath)
+
+		// Check 1: Path exists and is a directory
+		const stats = await fs.stat(absolutePath)
+		if (!stats.isDirectory()) {
+			return {
+				isValid: false,
+				path: absolutePath,
+				errors: ['Path is not a directory'],
+			}
+		}
+
+		const errors = []
+
+		// Check 2: Folder name ends with ' Project'
+		const folderName = path.basename(absolutePath)
+		if (!folderName.endsWith(' Project')) {
+			errors.push("Folder name does not end with ' Project'")
+		}
+
+		// Check 3: Contains .als files
+		let hasAlsFiles = false
+		let infoFolderExists = false
+
+		const entries = await fs.readdir(absolutePath, { withFileTypes: true })
+
+		for (const entry of entries) {
+			if (entry.isFile() && entry.name.endsWith('.als')) {
+				hasAlsFiles = true
+			}
+			if (entry.isDirectory() && entry.name === 'Ableton Project Info') {
+				infoFolderExists = true
+			}
+		}
+
+		if (!hasAlsFiles) {
+			errors.push('No .als files found in directory')
+		}
+
+		// Check 4: Contains 'Ableton Project Info' folder
+		if (!infoFolderExists) {
+			errors.push("'Ableton Project Info' folder not found")
+		}
+
+		return {
+			isValid: errors.length === 0,
+			path: absolutePath,
+			folderName: folderName,
+			errors: errors.length > 0 ? errors : undefined,
+		}
+	} catch (error) {
+		if (error.code === 'ENOENT') {
+			return {
+				isValid: false,
+				path: projectPath,
+				errors: ['Path does not exist'],
+			}
+		}
+		throw new Error(`Error validating project: ${error.message}`)
+	}
+}
+
+// // Example usage
+// async function main() {
+//     const testPaths = [
+//         './My Project',                    // Good name, may not exist
+//         '/path/to/Not A Project',          // Wrong name
+//         '/path/to/Another Project',        // Right name, may not exist
+//         '.',                               // Current directory
+//         process.cwd(),                     // Current working directory
+//     ];
+
+//     for (const testPath of testPaths) {
+//         try {
+//             const result = await validateAbletonProject(testPath);
+//             console.log(`\nValidating: ${testPath}`);
+//             console.log(JSON.stringify(result, null, 2));
+//         } catch (error) {
+//             console.error(`Error with path ${testPath}: ${error.message}`);
+//         }
+//     }
+// }
+
+// main();
