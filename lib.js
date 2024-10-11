@@ -237,3 +237,40 @@ export async function validateAbletonProject(projectPath) {
 		throw new Error(`Error validating project: ${error.message}`)
 	}
 }
+
+export async function findAbletonProjects(rootPath) {
+	const projects = {
+		valid: [],
+		invalid: [],
+	}
+
+	async function recursiveSearch(currentPath) {
+		try {
+			const entries = await fs.readdir(currentPath, { withFileTypes: true })
+
+			for (const entry of entries) {
+				const fullPath = path.join(currentPath, entry.name)
+
+				if (entry.isDirectory()) {
+					if (entry.name.endsWith(' Project')) {
+						// Validate the potential Ableton project
+						const validation = await validateAbletonProject(fullPath)
+						if (validation.isValid) {
+							projects.valid.push(validation)
+						} else {
+							projects.invalid.push(validation)
+						}
+					} else {
+						// Recursively search other directories
+						await recursiveSearch(fullPath)
+					}
+				}
+			}
+		} catch (error) {
+			console.error(`Error accessing ${currentPath}: ${error.message}`)
+		}
+	}
+
+	await recursiveSearch(path.resolve(rootPath))
+	return projects
+}

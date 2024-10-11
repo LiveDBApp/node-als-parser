@@ -42,3 +42,22 @@ test('failing a non-existent folder', async () => {
 	expect(results.isValid).toBe(false)
 	expect(results.errors[0]).toBe('Path does not exist')
 })
+
+test('finding ableton project directories', async () => {
+	let results = await lib.findAbletonProjects('./testfiles/')
+
+	// console.log(results.invalid[0].errors)
+
+	expect(results.valid.length).toBe(1)
+	expect(results.invalid.length).toBe(1)
+	expect(results.invalid[0].isValid).toBe(false)
+
+	/**
+	 *  [
+        'No .als files found in directory',
+        "'Ableton Project Info' folder not found"
+      ]
+	 */
+
+	expect(results.invalid[0].errors.length).toBe(2)
+})
