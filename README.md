@@ -16,7 +16,7 @@ files.map(async (file) => {
 This library:
 
 - reads ALS files and extracts the version number from them.
-- provides access to more info about als files and Ableton Live projects in general
+- provides access to more info about als files and Ableton Live projects in general.
 - the utility function findAlsFiles is provided to search for ALS files in a directory recursively.
 
 This library does _not_:
