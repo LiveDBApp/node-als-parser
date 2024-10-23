@@ -7,6 +7,7 @@ import {
 } from './lib.js'
 import { stat } from 'node:fs'
 import { basename } from 'node:path'
+export { findAlsFiles }
 
 export class LiveSet {
 	#_raw
