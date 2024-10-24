@@ -5,9 +5,10 @@ import {
 	findAlsFiles,
 	validateAbletonProject,
 } from './lib.js'
+
 import { stat } from 'node:fs'
 import { basename } from 'node:path'
-export { findAlsFiles }
+export { findAlsFiles, findAbletonProjects } from './lib.js'
 
 export class LiveSet {
 	#_raw
@@ -69,9 +70,9 @@ export class LiveSet {
 		let pieces = regex.exec(this.#_parsed['$'].Creator)
 		return {
 			app: pieces[1],
-			majorVersion: parseInt(pieces[2]),
-			minorVersion: parseInt(pieces[3]),
-			buildNumber: parseInt(pieces[4]) || 0,
+			major: parseInt(pieces[2]),
+			minor: parseInt(pieces[3]),
+			patch: parseInt(pieces[4]) || 0,
 		}
 	}
 

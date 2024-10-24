@@ -1,42 +1,32 @@
-import { Project } from './index.js'
-import { findAlsFiles } from './lib.js'
+import { LiveProject } from './index.js'
+import { findAlsFiles, findAbletonProjects } from './lib.js'
 import path from 'node:path'
+import _ from 'lodash-es'
 
-// let files = await findAlsFiles('./testfiles')
-let files = await findAlsFiles(
+let projects = await findAbletonProjects(
 	'/Users/jeff/Library/CloudStorage/Dropbox/Music/Projects/Sonic Boom',
 )
-// /Users/jeff/Library/CloudStorage/Dropbox/Music/Projects
-//
-// console.log(`Found ${files.length} project files`)
 
-// let project = await new Project(files[0])
+let mapped = await Promise.all(
+	projects.valid.map(async (project) => {
+		let files = await findAlsFiles(project.path)
 
-function toTSV(project) {
-	return [
-		project.info.name,
-		project.trackCount,
-		project.version.app,
-		`${project.version.majorVersion}.${project.version.minorVersion}.${project.version.buildNumber}`,
-		Date(project.info.created),
-		Date(project.info.modified),
-	].join('\t')
-}
-
-// console.log(project.fileInfo)
-// console.log(project.info)
-
-// let _path =
-// 	'/Users/jeff/Library/CloudStorage/Dropbox/Music/Projects/Continental Drifters/Sat May 14 Guitars Project/Backup/Sunday May 15 [2022-05-15 121605].als'
-
-console.log(
-	['Name', 'Track Count', 'App', 'Version', 'Created', 'Modified'].join('\t'),
+		return {
+			...project,
+			files,
+		}
+	}),
 )
 
-files.forEach(async (file) => {
-	let project = await new Project(file)
+// console.log(mapped)
 
-	// console.log(project.info.name)
-	// console.log(project.info)
-	console.log(toTSV(project))
+let lines = _.map(mapped, (project) => {
+	return ` - ${project.folderName.split(' Project').shift()}: ${
+		project.files.length
+	} tracks`
 })
+
+console.log(`
+${_.size(mapped)} Projects Found:
+${lines.join('\n')}
+`)
