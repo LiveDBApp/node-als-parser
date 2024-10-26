@@ -26,7 +26,8 @@ test('parse xml', async () => {
 
 test('findAlsFiles', async () => {
 	let files = await lib.findAlsFiles('./testfiles/')
-	expect(files[0].split('/').pop()).toBe('Michelle.als')
+	// console.log(files)
+	expect(files[2].split('/').pop()).toBe('Michelle.als')
 })
 
 test('validating a project folder', async () => {
@@ -48,7 +49,7 @@ test('finding ableton project directories', async () => {
 
 	// console.log(results.invalid[0].errors)
 
-	expect(results.valid.length).toBe(1)
+	expect(results.valid.length).toBe(3)
 	expect(results.invalid.length).toBe(1)
 	expect(results.invalid[0].isValid).toBe(false)
 

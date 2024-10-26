@@ -6,15 +6,22 @@ import {
 	validateAbletonProject,
 } from './lib.js'
 
-import { stat } from 'node:fs'
+import { stat, writeFileSync } from 'node:fs'
 import { basename } from 'node:path'
 export { findAlsFiles, findAbletonProjects } from './lib.js'
+import _ from 'lodash-es'
+
+function dumpData(object, key) {
+	let str = JSON.stringify(object, null, ' ')
+	writeFileSync(`./tmp/${key}.json`, str)
+}
 
 export class LiveSet {
 	#_raw
 	#_parsed
 	#_path
 	#_fileinfo
+	#_tempo
 
 	constructor(path) {
 		this.#_path = path
@@ -37,6 +44,8 @@ export class LiveSet {
 
 		try {
 			this.#_parsed = await parseXmlString(this.#_raw)
+			this.#_tempo =
+				this.#_parsed.LiveSet.MasterTrack.DeviceChain.Mixer.Tempo.Manual.$.Value
 		} catch (e) {
 			console.error('Error parsing xml', e)
 			throw new Error(`Error parsing xml: ${this._path}`)
@@ -74,6 +83,10 @@ export class LiveSet {
 			minor: parseInt(pieces[3]),
 			patch: parseInt(pieces[4]) || 0,
 		}
+	}
+
+	get tempo() {
+		return this.#_tempo
 	}
 
 	get location() {
