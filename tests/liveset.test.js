@@ -17,6 +17,6 @@ test('getting tempo from different set files', async () => {
 	let foo = await new LiveSet('./testfiles/Foo Project/Foo.als')
 
 	let bar = await new LiveSet('./testfiles/Bar Project/Bar.als')
-	expect(foo.tempo).toBe('199.990005')
-	expect(bar.tempo).toBe('104.5')
+	expect(foo.tempo).toBe('199.99')
+	expect(bar.tempo).toBe('104.50')
 })

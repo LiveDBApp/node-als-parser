@@ -46,7 +46,7 @@ export class LiveSet {
 			this.#_parsed = await parseXmlString(this.#_raw)
 			this.#_tempo =
 				this.#_parsed.LiveSet.MasterTrack.DeviceChain.Mixer.Tempo.Manual.$.Value
-			console.log(this.info.name, this.#_tempo)
+			// console.log(this.info.name, this.#_tempo)
 		} catch (e) {
 			console.error('Error parsing xml', e)
 			throw new Error(`Error parsing xml: ${this._path}`)
@@ -87,7 +87,7 @@ export class LiveSet {
 	}
 
 	get tempo() {
-		return this.#_tempo.toFixed(2)
+		return parseFloat(this.#_tempo).toFixed(2)
 	}
 
 	get location() {
