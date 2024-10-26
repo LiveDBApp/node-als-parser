@@ -15,8 +15,7 @@ test('we get the expected metadata back', async () => {
 
 test('getting tempo from different set files', async () => {
 	let foo = await new LiveSet('./testfiles/Foo Project/Foo.als')
-
-	let bar = await new LiveSet('./testfiles/Bar Project/Bar.als')
 	expect(foo.tempo).toBe('199.99')
+	let bar = await new LiveSet('./testfiles/Bar Project/Bar.als')
 	expect(bar.tempo).toBe('104.50')
 })
