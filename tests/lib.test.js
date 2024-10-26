@@ -49,6 +49,8 @@ test('finding ableton project directories', async () => {
 
 	// console.log(results.invalid[0].errors)
 
+	console.log(results)
+
 	expect(results.valid.length).toBe(3)
 	expect(results.invalid.length).toBe(1)
 	expect(results.invalid[0].isValid).toBe(false)
