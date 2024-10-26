@@ -47,14 +47,6 @@ test('failing a non-existent folder', async () => {
 test('finding ableton project directories', async () => {
 	let results = await lib.findAbletonProjects('./testfiles/')
 
-	// console.log(results.invalid[0].errors)
-
-	// console.log(results)
-
-	_.each(results.invalid, (project) => {
-		console.log(project.errors)
-	})
-
 	expect(results.valid.length).toBe(3)
 	expect(results.invalid.length).toBe(1)
 	expect(results.invalid[0].isValid).toBe(false)
