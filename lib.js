@@ -223,7 +223,7 @@ export async function validateAbletonProject(projectPath) {
 		return {
 			isValid: errors.length === 0,
 			path: absolutePath,
-			folderName: folderName,
+			name: folderName.split(' Project').shift(),
 			errors: errors.length > 0 ? errors : undefined,
 		}
 	} catch (error) {

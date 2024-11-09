@@ -131,7 +131,7 @@ export class LiveProject {
 			}
 			this.#_valid = true
 			this.path = _result.path
-			this.name = _result.folderName.split(' Project').shift()
+			this.name = _result.name
 
 			this.liveSetPaths = await findAlsFiles(this.#_directory, {
 				backups: false,
