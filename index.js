@@ -90,14 +90,6 @@ export class LiveSet {
 		return parseFloat(this.#_tempo).toFixed(2)
 	}
 
-	get location() {
-		return this.#_path
-	}
-
-	get fileInfo() {
-		return this.#_fileinfo
-	}
-
 	get info() {
 		return {
 			name: this.#_fileinfo.name,
@@ -105,7 +97,7 @@ export class LiveSet {
 			tracks: this.tracks,
 			trackCount: this.trackCount,
 			location: this.location,
-			info: this.fileInfo,
+			...this.#_fileinfo,
 		}
 	}
 }
