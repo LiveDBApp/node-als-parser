@@ -5,8 +5,6 @@ const TEST_PROJECT_FILE = './testfiles/Michelle.als'
 test('we get the expected metadata back', async () => {
 	let set = await new LiveSet(TEST_PROJECT_FILE)
 
-	console.log(set.info)
-
 	expect(set.info.name).toBe('Michelle.als')
 	expect(set.info.trackCount).toBe(9)
 	expect(set.info.version.app).toBe('Ableton Live')
