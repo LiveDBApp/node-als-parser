@@ -18,7 +18,7 @@
     "transform": {}
   },
   "devDependencies": {
-    "jest": "^30.0.0-alpha.6",
-    "lodash-es": "^4.17.21"
+    "jest": "^30.2.0",
+    "lodash-es": "^4.17.22"
   }
 }
