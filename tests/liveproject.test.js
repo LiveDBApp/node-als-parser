@@ -20,8 +20,6 @@ test('loading sets in a project', async () => {
 
 	await _project.loadSets()
 
-	// console.log(_project.liveSets)
-
 	expect(_project.liveSets).toHaveLength(1)
 	expect(_project.liveSets[0].info.name).toBe(`${TEST_PROJECT_FOLDER}.als`)
 })
