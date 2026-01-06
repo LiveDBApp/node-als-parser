@@ -18,6 +18,7 @@ console.log('projectDirs', projectDirs)
 projectDirs.forEach(async (projectDir) => {
 	let proj = await new LiveProject(projectDir)
 
+	// this takes awhile, it's reading files and parsing xml
 	await proj.loadSets()
 
 	console.log(`Project: ${proj.name} has ${proj.liveSets.length} live sets:`)
