@@ -1,4 +1,4 @@
-import { LiveSet, LiveProject } from '../index.js'
+import { LiveProject } from '../index.js'
 import { readdirSync } from 'fs'
 import { join } from 'path'
 
