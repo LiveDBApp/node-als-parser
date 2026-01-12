@@ -27,7 +27,7 @@ test('parse xml', async () => {
 test('findAlsFiles', async () => {
 	let files = await lib.findAlsFiles('./testfiles/')
 	// console.log(files)
-	expect(files[2].split('/').pop()).toBe('Michelle.als')
+	expect(files[2].split('/').pop()).toBe('Michelle-12.3.als')
 })
 
 test('validating a project folder', async () => {

@@ -96,8 +96,7 @@ export class LiveSet extends EventEmitter {
 		try {
 			this.emit('progress', { stage: 'parsing-xml', percent: 50 })
 			this.#_parsed = await parseXmlString(this.#_raw)
-			this.#_tempo =
-				this.#_parsed.LiveSet.MasterTrack.DeviceChain.Mixer.Tempo.Manual.$.Value
+
 			this.emit('progress', { stage: 'parsing-complete', percent: 90 })
 		} catch (e) {
 			this.emit('progress', { stage: 'error', error: e.message })
@@ -105,8 +104,34 @@ export class LiveSet extends EventEmitter {
 			throw new Error(`Error parsing xml: ${this._path}`)
 		}
 
+		// Live 12.something changed from MasterTrack to MainTrack
+		// TODO: some sort of abstraction for different versions?
+		// need to investigate how often this happens
+
+		if (
+			_.has(this.#_parsed, 'LiveSet.MasterTrack.DeviceChain.Mixer.Tempo.Manual')
+		) {
+			this.#_tempo =
+				this.#_parsed.LiveSet.MasterTrack.DeviceChain.Mixer.Tempo.Manual[
+					'$'
+				].Value
+		} else if (
+			_.has(this.#_parsed, 'LiveSet.MainTrack.DeviceChain.Mixer.Tempo.Manual')
+		) {
+			this.#_tempo =
+				this.#_parsed.LiveSet.MainTrack.DeviceChain.Mixer.Tempo.Manual[
+					'$'
+				].Value
+		} else {
+			this.#_tempo = 'NaN'
+		}
+
 		this.initialized = true
 		this.emit('progress', { stage: 'complete', percent: 100 })
+	}
+
+	get tempo() {
+		return this.#_tempo
 	}
 
 	get tracks() {
@@ -147,6 +172,7 @@ export class LiveSet extends EventEmitter {
 	get info() {
 		return {
 			name: this.#_fileinfo.name,
+			tempo: this.tempo,
 			version: this.version,
 			tracks: this.tracks,
 			trackCount: this.trackCount,
