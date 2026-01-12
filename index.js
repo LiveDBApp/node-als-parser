@@ -1,14 +1,23 @@
 import {
 	parseXmlString,
 	readZipContents,
+	readZipContentsStreaming,
 	getFileInfo,
 	findAlsFiles,
+	findAlsFilesStreaming,
 	validateAbletonProject,
 } from './lib.js'
 
 import { stat, writeFileSync } from 'node:fs'
 import { basename } from 'node:path'
-export { findAlsFiles, findAbletonProjects } from './lib.js'
+import { EventEmitter } from 'node:events'
+export {
+	findAlsFiles,
+	findAlsFilesStreaming,
+	findAbletonProjects,
+	findAbletonProjectsStreaming,
+	readZipContentsStreaming,
+} from './lib.js'
 import _ from 'lodash-es'
 
 function dumpData(object, key) {
@@ -16,43 +25,88 @@ function dumpData(object, key) {
 	writeFileSync(`./tmp/${key}.json`, str)
 }
 
-export class LiveSet {
+export class LiveSet extends EventEmitter {
 	#_raw
 	#_parsed
 	#_path
 	#_fileinfo
 	#_tempo
 
-	constructor(path) {
+	constructor(path, options = {}) {
+		super()
 		this.#_path = path
 		this.initialized = false
 
+		// If autoInit is false, don't auto-initialize (for streaming use case)
+		if (options.autoInit === false) {
+			return this
+		}
+
+		// Default behavior: auto-initialize (backward compatible)
 		return (async () => {
-			this.#_fileinfo = await getFileInfo(this.#_path)
-			await this.read()
+			await this.init()
 			return this
 		})()
 	}
 
+	// Static factory method that creates and reads in one step
+	static async create(path) {
+		const instance = new LiveSet(path, { autoInit: false })
+		await instance.init()
+		return instance
+	}
+
+	// Initialize the LiveSet (get file info and read)
+	async init() {
+		this.#_fileinfo = await getFileInfo(this.#_path)
+		await this.read()
+		return this
+	}
+
 	async read() {
 		try {
-			this.#_raw = await readZipContents(this.#_path)
+			this.emit('progress', {
+				stage: 'reading-file',
+				percent: 0,
+				path: this.#_path,
+			})
+
+			// Use streaming version for progress reporting
+			for await (const event of readZipContentsStreaming(this.#_path)) {
+				if (event.stage === 'complete') {
+					this.#_raw = event.data
+				} else if (event.stage === 'error') {
+					this.emit('progress', { stage: 'error', error: event.error })
+				} else {
+					// Emit unzipping progress (0-50%)
+					this.emit('progress', {
+						stage: event.stage,
+						percent: event.percent * 0.5,
+						bytesRead: event.bytesRead,
+						bytesTotal: event.bytesTotal,
+					})
+				}
+			}
 		} catch (e) {
+			this.emit('progress', { stage: 'error', error: e.message })
 			console.error('Error reading project file', e)
 			throw new Error(`Error reading project file: ${this._path}`)
 		}
 
 		try {
+			this.emit('progress', { stage: 'parsing-xml', percent: 50 })
 			this.#_parsed = await parseXmlString(this.#_raw)
 			this.#_tempo =
 				this.#_parsed.LiveSet.MasterTrack.DeviceChain.Mixer.Tempo.Manual.$.Value
-			// console.log(this.info.name, this.#_tempo)
+			this.emit('progress', { stage: 'parsing-complete', percent: 90 })
 		} catch (e) {
+			this.emit('progress', { stage: 'error', error: e.message })
 			console.error('Error parsing xml', e)
 			throw new Error(`Error parsing xml: ${this._path}`)
 		}
 
 		this.initialized = true
+		this.emit('progress', { stage: 'complete', percent: 100 })
 	}
 
 	get tracks() {
@@ -102,13 +156,14 @@ export class LiveSet {
 	}
 }
 
-export class LiveProject {
+export class LiveProject extends EventEmitter {
 	#_directory
 	#_valid
 	liveSets = []
 	liveSetPaths = []
 
 	constructor(directory) {
+		super()
 		this.#_directory = directory
 		this.path = false
 		this.name = false
@@ -138,11 +193,49 @@ export class LiveProject {
 	}
 
 	async loadSets() {
-		let map = this.liveSetPaths.map((path) => {
-			return new LiveSet(path)
+		const total = this.liveSetPaths.length
+		let completed = 0
+
+		this.emit('progress', {
+			stage: 'loading-sets',
+			completed: 0,
+			total,
+			percent: 0,
 		})
 
-		this.liveSets = await Promise.all(map)
+		for (const setPath of this.liveSetPaths) {
+			// Create LiveSet instance without auto-init to attach listeners first
+			const liveSet = new LiveSet(setPath, { autoInit: false })
+
+			// Attach event listeners before initialization
+			liveSet.on('progress', (event) => {
+				this.emit('set-progress', {
+					path: setPath,
+					setIndex: completed,
+					...event,
+				})
+			})
+
+			// Now initialize (read file info and parse)
+			await liveSet.init()
+
+			this.liveSets.push(liveSet)
+			completed++
+
+			this.emit('progress', {
+				stage: 'loading-sets',
+				completed,
+				total,
+				percent: (completed / total) * 100,
+			})
+		}
+
+		this.emit('progress', {
+			stage: 'complete',
+			completed: total,
+			total,
+			percent: 100,
+		})
 
 		return true
 	}
