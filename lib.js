@@ -6,6 +6,7 @@ import xml2js from 'xml2js'
 import path from 'node:path'
 import { createReadStream } from 'fs'
 import { createHash } from 'crypto'
+import { EventEmitter } from 'node:events'
 
 const streamToBuffer = async (stream) => {
 	const chunks = []
@@ -33,6 +34,44 @@ export async function readZipContents(zipFilePath) {
 
 		return contents
 	} catch (error) {
+		throw new Error(`Error reading zip file: ${error.message}`)
+	}
+}
+
+export async function* readZipContentsStreaming(zipFilePath) {
+	try {
+		yield { stage: 'reading', percent: 0, file: zipFilePath }
+
+		const stats = await fs.stat(zipFilePath)
+		const totalSize = stats.size
+		const fileStream = createReadStream(zipFilePath)
+
+		yield { stage: 'unzipping', percent: 25, bytesTotal: totalSize }
+
+		const unzip = createUnzip()
+		const unzippedStream = fileStream.pipe(unzip)
+
+		const chunks = []
+		let bytesRead = 0
+
+		for await (const chunk of unzippedStream) {
+			chunks.push(chunk)
+			bytesRead += chunk.length
+			// Progress from 25% to 95% during unzipping
+			const progress = Math.min(95, 25 + (bytesRead / totalSize) * 70)
+			yield {
+				stage: 'processing',
+				percent: progress,
+				bytesRead,
+				bytesTotal: totalSize,
+			}
+		}
+
+		const contents = Buffer.concat(chunks).toString('utf-8')
+		yield { stage: 'complete', percent: 100, data: contents }
+		return contents
+	} catch (error) {
+		yield { stage: 'error', error: error.message }
 		throw new Error(`Error reading zip file: ${error.message}`)
 	}
 }
@@ -106,6 +145,62 @@ export async function findAlsFiles(directoryPath, options) {
 
 	await recursiveSearch(directoryPath)
 	return alsFiles
+}
+
+export async function* findAlsFilesStreaming(directoryPath, options) {
+	let _directoryPath
+
+	if (!path.isAbsolute(directoryPath)) {
+		_directoryPath = path.normalize(process.cwd(), directoryPath)
+	}
+
+	if (!options) {
+		options = { backups: false }
+	}
+
+	function isBackupFile(p) {
+		let _dir = path.dirname(p).split(path.sep).pop()
+		return _dir === 'Backup'
+	}
+
+	async function* recursiveSearch(currentPath, depth = 0) {
+		yield {
+			type: 'scanning',
+			path: currentPath,
+			depth,
+		}
+
+		try {
+			const entries = await fs.readdir(currentPath, { withFileTypes: true })
+
+			for (const entry of entries) {
+				const fullPath = path.join(currentPath, entry.name)
+
+				if (entry.isDirectory()) {
+					yield* recursiveSearch(fullPath, depth + 1)
+				} else if (entry.isFile() && path.extname(entry.name) === '.als') {
+					const shouldInclude =
+						options.backups === true || !isBackupFile(fullPath)
+					if (shouldInclude) {
+						yield {
+							type: 'found',
+							file: path.resolve(fullPath),
+							depth,
+						}
+					}
+				}
+			}
+		} catch (error) {
+			yield {
+				type: 'error',
+				path: currentPath,
+				error: error.message,
+			}
+		}
+	}
+
+	yield* recursiveSearch(directoryPath)
+	yield { type: 'complete' }
 }
 
 async function calculateFileSha256(filePath) {
@@ -273,4 +368,56 @@ export async function findAbletonProjects(rootPath) {
 
 	await recursiveSearch(path.resolve(rootPath))
 	return projects
+}
+
+export async function* findAbletonProjectsStreaming(rootPath) {
+	async function* recursiveSearch(currentPath, depth = 0) {
+		yield {
+			type: 'scanning',
+			path: currentPath,
+			depth,
+		}
+
+		try {
+			const entries = await fs.readdir(currentPath, { withFileTypes: true })
+
+			for (const entry of entries) {
+				const fullPath = path.join(currentPath, entry.name)
+
+				if (entry.isDirectory()) {
+					if (entry.name.endsWith(' Project')) {
+						// Validate the potential Ableton project
+						yield { type: 'validating', path: fullPath }
+						const validation = await validateAbletonProject(fullPath)
+
+						if (validation.isValid) {
+							yield {
+								type: 'project-found',
+								project: validation,
+								isValid: true,
+							}
+						} else {
+							yield {
+								type: 'project-found',
+								project: validation,
+								isValid: false,
+							}
+						}
+					} else {
+						// Recursively search other directories
+						yield* recursiveSearch(fullPath, depth + 1)
+					}
+				}
+			}
+		} catch (error) {
+			yield {
+				type: 'error',
+				path: currentPath,
+				error: error.message,
+			}
+		}
+	}
+
+	yield* recursiveSearch(path.resolve(rootPath))
+	yield { type: 'complete' }
 }
