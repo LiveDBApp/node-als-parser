@@ -60,6 +60,9 @@ export class LiveSet extends EventEmitter {
 	async init() {
 		this.#_fileinfo = await getFileInfo(this.#_path)
 		await this.read()
+
+		// writeFileSync('./tmp-set.json', JSON.stringify(this.#_parsed, null, ' '))
+
 		return this
 	}
 
@@ -155,8 +158,11 @@ export class LiveSet extends EventEmitter {
 	}
 
 	get version() {
-		let regex = /([a-zA-Z\ ]+)\ ([0-9]+)\.([\d]+)\.([\d]+)?/
+		let regex = /([a-zA-Z\ ]+)\ ([0-9]+)\.([\d]+)(?:\.([\d]+))?/
 		let pieces = regex.exec(this.#_parsed['$'].Creator)
+
+		console.log('Creator', this.#_parsed['$'].Creator, pieces)
+
 		return {
 			app: pieces[1],
 			major: parseInt(pieces[2]),

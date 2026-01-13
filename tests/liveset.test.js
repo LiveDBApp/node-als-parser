@@ -41,3 +41,38 @@ test('loading a Live 12.3 als file', async () => {
 		'365ca6ed7b4bb2e787e4be0923fbe55d1acf70a5829bfdb5d29c36104b36b0c7',
 	)
 })
+
+test('version parsing supports different Creator formats', () => {
+	const testCases = [
+		{
+			creator: 'Ableton Live 12.3.2',
+			expected: { app: 'Ableton Live', major: 12, minor: 3, patch: 2 },
+		},
+		{
+			creator: 'Ableton Live 11.3.21',
+			expected: { app: 'Ableton Live', major: 11, minor: 3, patch: 21 },
+		},
+		{
+			creator: 'Ableton Live 10.1',
+			expected: { app: 'Ableton Live', major: 10, minor: 1, patch: 0 },
+		},
+		{
+			creator: 'Ableton Live 9.7',
+			expected: { app: 'Ableton Live', major: 9, minor: 7, patch: 0 },
+		},
+	]
+
+	testCases.forEach(({ creator, expected }) => {
+		const regex = /([a-zA-Z\ ]+)\ ([0-9]+)\.([\d]+)(?:\.([\d]+))?/
+		const pieces = regex.exec(creator)
+
+		const result = {
+			app: pieces[1],
+			major: parseInt(pieces[2]),
+			minor: parseInt(pieces[3]),
+			patch: parseInt(pieces[4]) || 0,
+		}
+
+		expect(result).toEqual(expected)
+	})
+})

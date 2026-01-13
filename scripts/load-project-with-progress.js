@@ -1,8 +1,27 @@
 import { LiveProject } from '../index.js'
 import { readdirSync } from 'fs'
 import { join } from 'path'
+import yargs from 'yargs'
+import { hideBin } from 'yargs/helpers'
 
-let projectsPath = '/Users/jeff/Dropbox/Music/Projects/Sonic Boom'
+const argv = yargs(hideBin(process.argv))
+	.usage('Usage: $0 <path>')
+	.command(
+		'$0 <path>',
+		'Load Ableton Live projects from a directory',
+		(yargs) => {
+			yargs.positional('path', {
+				describe: 'Path to the directory containing Ableton Live projects',
+				type: 'string',
+			})
+		},
+	)
+	.demandCommand(1, 'You must provide a path to the projects directory')
+	.help()
+	.alias('help', 'h')
+	.parseSync()
+
+const projectsPath = argv.path
 
 let projectDirs = readdirSync(projectsPath, { withFileTypes: true })
 	.filter((dirent) => dirent.isDirectory())
