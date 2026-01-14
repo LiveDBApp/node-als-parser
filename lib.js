@@ -16,6 +16,40 @@ const streamToBuffer = async (stream) => {
 	return Buffer.concat(chunks)
 }
 
+export function findKeyPaths(obj, targetKey, currentPath = []) {
+	const results = []
+
+	if (obj === null || obj === undefined) {
+		return results
+	}
+
+	// Check if current object has the target key
+	if (typeof obj === 'object') {
+		for (const key in obj) {
+			if (key === targetKey) {
+				// Found the target key, add the path
+				results.push([...currentPath, key].join('.'))
+			}
+
+			// Recursively search in the value
+			const value = obj[key]
+			if (typeof value === 'object' && value !== null) {
+				results.push(...findKeyPaths(value, targetKey, [...currentPath, key]))
+			}
+		}
+	}
+
+	return results
+}
+
+export function getSampleRefs(data) {
+	const allResults = findKeyPaths(data, 'SampleRef')
+
+	console.log('allResults', allResults)
+
+	return allResults
+}
+
 export async function readZipContents(zipFilePath) {
 	try {
 		// Read the zip file

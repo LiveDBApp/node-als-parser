@@ -1,6 +1,6 @@
 import { LiveSet } from '../index.js'
 
-const TEST_PROJECT_FILE = './testfiles/Michelle.als'
+const TEST_PROJECT_FILE = './tests/test-data/projects/Michelle.als'
 
 test('we get the expected metadata back', async () => {
 	let set = await new LiveSet(TEST_PROJECT_FILE)
@@ -17,19 +17,19 @@ test('we get the expected metadata back', async () => {
 })
 
 test('getting tempo from different set files', async () => {
-	let foo = await new LiveSet('./testfiles/Foo Project/Foo.als')
+	let foo = await new LiveSet('./tests/test-data/projects/Foo Project/Foo.als')
 
 	// console.log('XXX info', foo.info)
 
 	// expect(foo.tempo).toBe('NaN')
 
 	expect(foo.tempo).toBe('199.99')
-	let bar = await new LiveSet('./testfiles/Bar Project/Bar.als')
+	let bar = await new LiveSet('./tests/test-data/projects/Bar Project/Bar.als')
 	// expect(bar.tempo).toBe('104.50')
 })
 
 test('loading a Live 12.3 als file', async () => {
-	let set = await new LiveSet('./testfiles/Michelle-12.3.als')
+	let set = await new LiveSet('./tests/test-data/projects/Michelle-12.3.als')
 
 	expect(set.info.name).toBe('Michelle-12.3.als')
 	expect(set.info.trackCount).toBe(9)

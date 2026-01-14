@@ -61,7 +61,10 @@ export class LiveSet extends EventEmitter {
 		this.#_fileinfo = await getFileInfo(this.#_path)
 		await this.read()
 
-		// writeFileSync('./tmp-set.json', JSON.stringify(this.#_parsed, null, ' '))
+		// writeFileSync(
+		// 	`./tmp/${this.#_fileinfo.name}.json`,
+		// 	JSON.stringify(this.#_parsed, null, ' '),
+		// )
 
 		return this
 	}
@@ -129,6 +132,14 @@ export class LiveSet extends EventEmitter {
 			this.#_tempo = 'NaN'
 		}
 
+		// TODO: extract more useful info here
+
+		// 1. all audio files used in the set (with paths) SampleRef
+
+		// 2. all devices used in the set, grouped by device type? see PluginDesc for plugins
+
+		// 3. somewhere else, a scanner that checks for missing audio files, plugins, etc.
+
 		this.initialized = true
 		this.emit('progress', { stage: 'complete', percent: 100 })
 	}
@@ -185,6 +196,10 @@ export class LiveSet extends EventEmitter {
 			location: this.location,
 			...this.#_fileinfo,
 		}
+	}
+
+	get parsed() {
+		return this.#_parsed
 	}
 }
 

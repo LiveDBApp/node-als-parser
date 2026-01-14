@@ -1,7 +1,9 @@
 import { LiveProject, LiveSet } from '../index.js'
 import path from 'node:path'
 
-const TEST_PROJECT_PATH = path.resolve('./testfiles/Test Project')
+const TEST_PROJECT_PATH = path.resolve(
+	'./tests/test-data/projects/Test Project',
+)
 const TEST_PROJECT_FOLDER = 'Test Project'
 const TEST_PROJECT_NAME = 'Test'
 

@@ -1,8 +1,8 @@
 import * as lib from '../lib.js'
 import _ from 'lodash-es'
 
-const TEST_FILE_PATH = './testfiles/Michelle.als'
-const TEST_PROJECT_FOLDER = './testfiles/Test Project'
+const TEST_FILE_PATH = './tests/test-data/projects/Michelle.als'
+const TEST_PROJECT_FOLDER = './tests/test-data/projects/Test Project'
 
 test('gets file info', async () => {
 	let results = await lib.getFileInfo(TEST_FILE_PATH)
@@ -25,9 +25,14 @@ test('parse xml', async () => {
 })
 
 test('findAlsFiles', async () => {
-	let files = await lib.findAlsFiles('./testfiles/')
-	// console.log(files)
-	expect(files[2].split('/').pop()).toBe('Michelle-12.3.als')
+	let files = await lib.findAlsFiles('./tests/test-data/projects/')
+	// console.log(files.length)
+
+	expect(files.length).toBe(5)
+
+	let filenames = files.map((f) => f.split('/').pop())
+	expect(filenames).toContain('Michelle.als')
+	expect(filenames).toContain('Test Project.als')
 })
 
 test('validating a project folder', async () => {
@@ -45,7 +50,7 @@ test('failing a non-existent folder', async () => {
 })
 
 test('finding ableton project directories', async () => {
-	let results = await lib.findAbletonProjects('./testfiles/')
+	let results = await lib.findAbletonProjects('./tests/test-data/projects/')
 
 	expect(results.valid.length).toBe(3)
 	expect(results.invalid.length).toBe(1)
