@@ -39,6 +39,16 @@ function findPropertiesByKey(obj, targetKeys, currentPath = '', results = []) {
 	return results
 }
 
+function getValue(obj) {
+	if (_.has(obj, '$.Value')) {
+		return obj['$']?.Value
+	} else {
+		throw new Error(
+			'Unexpected object structure: ' + JSON.stringify(obj, null, '  '),
+		)
+	}
+}
+
 function getPluginInfo(PluginDesc) {
 	let _keys = _.keys(PluginDesc)
 
@@ -51,16 +61,6 @@ function getPluginInfo(PluginDesc) {
 	}
 
 	return null // wtf? clap??
-}
-
-function getValue(obj) {
-	if (_.has(obj, '$.Value')) {
-		return obj['$']?.Value
-	} else {
-		throw new Error(
-			'Unexpected object structure: ' + JSON.stringify(obj, null, '  '),
-		)
-	}
 }
 
 function getAuPluginInfo(PluginDesc) {
@@ -180,10 +180,10 @@ const results = findPropertiesByKey(data, targetKeys)
 
 // console.log('Results', results)
 
-// console.log(
-// 	'Devices in All Effects track',
-// 	_.keys(data.LiveSet.Tracks.AudioTrack[1].DeviceChain.DeviceChain.Devices),
-// )
+console.log(
+	'Devices in All Effects track',
+	_.keys(data.LiveSet.Tracks.AudioTrack[1].DeviceChain.DeviceChain.Devices),
+)
 
 // console.log(
 // 	'Devices in First MIDI track ( track 3 )',

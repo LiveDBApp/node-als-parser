@@ -1,4 +1,4 @@
-import * as lib from '../lib.js'
+import * as lib from '../lib/utils.js'
 import _ from 'lodash-es'
 
 const TEST_FILE_PATH = './tests/test-data/projects/Michelle.als'
