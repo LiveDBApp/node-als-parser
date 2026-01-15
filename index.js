@@ -172,7 +172,7 @@ export class LiveSet extends EventEmitter {
 		let regex = /([a-zA-Z\ ]+)\ ([0-9]+)\.([\d]+)(?:\.([\d]+))?/
 		let pieces = regex.exec(this.#_parsed['$'].Creator)
 
-		console.log('Creator', this.#_parsed['$'].Creator, pieces)
+		// console.log('Creator', this.#_parsed['$'].Creator, pieces)
 
 		return {
 			app: pieces[1],

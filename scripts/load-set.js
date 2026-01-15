@@ -36,6 +36,10 @@ try {
 	let srefs = findKeyPaths(set.parsed, 'SampleRef')
 	console.log(`\nFound ${srefs.length} SampleRef entries in the set:`)
 
+	srefs.forEach((p, idx) => {
+		console.log(`  [${idx + 1}] Path: ${p}`)
+	})
+
 	// 2. all devices used in the set, grouped by device type? see PluginDesc for plugins
 
 	let plugins = findKeyPaths(set.parsed, 'PluginDesc')
