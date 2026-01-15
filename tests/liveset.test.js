@@ -1,4 +1,5 @@
 import { LiveSet } from '../index.js'
+import _ from 'lodash-es'
 
 const TEST_PROJECT_FILE = './tests/test-data/projects/Michelle.als'
 
@@ -75,4 +76,28 @@ test('version parsing supports different Creator formats', () => {
 
 		expect(result).toEqual(expected)
 	})
+})
+
+test('track and device parsing', async () => {
+	let set = await new LiveSet('./tests/test-data/projects/Michelle-12.3.als')
+
+	// console.log('Set name:', set.info.name)
+	// console.log('Tracks:', set.tracks)
+
+	expect(set.info.trackCount).toBe(9)
+
+	expect(_.keys(set.tracks).sort()).toEqual([
+		'AudioTrack',
+		'GroupTrack',
+		'MidiTrack',
+		'ReturnTrack',
+	])
+
+	let kickTrack = set.tracks.AudioTrack[0]
+
+	console.log(kickTrack)
+
+	expect(kickTrack.name).toBe('Kick')
+	expect(kickTrack.devices.length).toBe(1)
+	expect(kickTrack.devices[0]).toBe('StereoGain')
 })
